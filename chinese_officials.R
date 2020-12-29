@@ -1,5 +1,6 @@
 library(XML)
 library(stringr)
+library(RCurl)
 
 getBio <- function(url)
 {
@@ -10,9 +11,9 @@ getBio <- function(url)
   #
   # Returns:
   #   A dataframe of the official's professional history.
-  
-  page <- htmlParse(url)
-  
+  url <- URLencode(iconv(url,from='GBK',to='UTF-8'))
+  urlpage <- getURL(url,encoding='UTF-8')
+  page <- htmlParse(urlpage)  
   name <- xpathSApply(page, "//*/div[@class='bioName']", xmlValue)
   
   # Get official's name
@@ -68,17 +69,17 @@ getOfficialsList <- function(url)
   #
   # Returns:
   #   A vectory of career URL's to scrape for officials' bios.
-  
-  page <- htmlParse(url)
-  links <- str_extract_all(toString.XMLNode(page), "biography/[^ ]+")[[1]]
+  page <- readLines(url,encoding="UTF-8")
+  nameline<-grep('class="link11"',page)
+  links <- str_extract_all(page[nameline], "biography/[^\"]+")[[1]]
   links <- gsub("[[:punct:]]*$","",links)
-  links <- paste("http://www.chinavitae.com/",links,"/career",sep="")
+  links <- paste("https://www.chinavitae.com/",links,"/career",sep="")
   
   return(links)
 }
 
 # Create a base URL, then all 26 letters, then paste them together to get all 26 library pages.
-base.url <- "http://www.chinavitae.com/biography_browse.php?l="
+base.url <- "https://www.chinavitae.com/biography_browse.php?l="
 page.letters <- letters[1:26]
 library.urls <- paste(base.url, page.letters, sep="")
 
